@@ -1,4 +1,10 @@
-# 🚀 Global Foundries Dashboard - Live Portfolio Demo
+# 🚀 Global Foundries Dashboard - Live---
+
+**📧 Contact**: [Your Email]  
+**💼 LinkedIn**: [Your LinkedIn]  
+**🔗 GitHub**: https://github.com/thegeekybeng/demo_gf
+
+*Developed as a recruitment showcase demonstrating expertise in semiconductor manufacturing, data science, and industrial optimization*lio Demo
 
 ## 📱 Access the Live Dashboard
 
@@ -42,4 +48,4 @@ This interactive dashboard demonstrates:
 **💼 LinkedIn**: [Your LinkedIn]  
 **🔗 GitHub**: [Your GitHub]
 
-*Developed as a recruitment showcase demonstrating expertise in semiconductor manufacturing, data science, and industrial optimization*
+_Developed as a recruitment showcase demonstrating expertise in semiconductor manufacturing, data science, and industrial optimization_

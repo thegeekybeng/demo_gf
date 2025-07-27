@@ -77,6 +77,12 @@ A comprehensive manufacturing process optimization dashboard analyzing the WM-81
    streamlit run dashboard/app.py
    ```
 
+## 🌐 Live Demo
+
+**📱 Access the live dashboard**: [Deployment URL will be here after Streamlit Cloud deployment]
+
+**🔗 GitHub Repository**: https://github.com/thegeekybeng/demo_gf
+
 ## 📊 Dashboard Sections
 
 ### Manufacturing Overview
