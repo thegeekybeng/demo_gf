@@ -1,0 +1,319 @@
+# MLOps Pipeline Configuration for Global Foundries Wafer Manufacturing
+# Production-ready configuration for machine learning operations
+
+# MLflow Configuration
+mlflow:
+  tracking_uri: "sqlite:///mlflow.db"
+  experiment_name: "wafer_manufacturing_optimization"
+  artifact_location: "./mlruns"
+  model_registry_uri: "sqlite:///mlflow.db"
+
+# Model Configurations
+models:
+  yield_prediction:
+    name: "yield_predictor"
+    version: "2.0"
+    target_metric: "r2_score"
+    threshold: 0.85
+    retrain_frequency_hours: 24
+    features:
+      - "temperature"
+      - "pressure" 
+      - "etch_time"
+      - "deposition_rate"
+      - "chamber_flow"
+      - "temp_deviation"
+      - "pressure_deviation"
+      - "temp_pressure_interaction"
+    hyperparameters:
+      n_estimators: 150
+      max_depth: 12
+      min_samples_split: 5
+      min_samples_leaf: 2
+      max_features: "sqrt"
+      random_state: 42
+      n_jobs: -1
+    
+  defect_classification:
+    name: "defect_classifier"
+    version: "1.1"
+    target_metric: "f1_score"
+    threshold: 0.9
+    retrain_frequency_hours: 48
+    features:
+      - "total_defects"
+      - "defect_density"
+      - "center_defects"
+      - "edge_defects"
+      - "symmetry_score"
+      - "cluster_count"
+      - "max_defect_size"
+    hyperparameters:
+      n_estimators: 200
+      max_depth: 15
+      min_samples_split: 3
+      min_samples_leaf: 1
+      max_features: "auto"
+      random_state: 42
+      n_jobs: -1
+      
+  anomaly_detection:
+    name: "anomaly_detector"
+    version: "1.0"
+    contamination: 0.1
+    features:
+      - "temperature"
+      - "pressure"
+      - "etch_time"
+      - "deposition_rate"
+      - "chamber_flow"
+
+# Data Drift Detection
+drift_detection:
+  threshold: 0.1
+  window_size: 1000
+  statistical_test: "ks_test"
+  p_value_threshold: 0.05
+  monitoring_features:
+    - "temperature"
+    - "pressure"
+    - "etch_time"
+    - "deposition_rate"
+    - "chamber_flow"
+
+# Model Monitoring
+monitoring:
+  performance_window_hours: 24
+  alert_thresholds:
+    accuracy_drop: 0.05
+    latency_increase: 100  # milliseconds
+    error_rate: 0.05
+    drift_score: 0.1
+  
+  metrics_collection:
+    - "accuracy"
+    - "precision" 
+    - "recall"
+    - "f1_score"
+    - "latency"
+    - "throughput"
+    - "error_rate"
+
+# Deployment Configuration
+deployment:
+  environments:
+    development:
+      replicas: 1
+      cpu_limit: "500m"
+      memory_limit: "1Gi"
+      auto_scaling: false
+      
+    staging:
+      replicas: 2
+      cpu_limit: "1000m"
+      memory_limit: "2Gi"
+      auto_scaling: true
+      min_replicas: 2
+      max_replicas: 5
+      
+    production:
+      replicas: 3
+      cpu_limit: "2000m"
+      memory_limit: "4Gi"
+      auto_scaling: true
+      min_replicas: 3
+      max_replicas: 10
+      
+  strategies:
+    default: "blue_green"
+    options:
+      - "blue_green"
+      - "canary"
+      - "rolling"
+      
+  health_checks:
+    liveness_probe:
+      path: "/health"
+      initial_delay: 30
+      period: 10
+    readiness_probe:
+      path: "/ready"
+      initial_delay: 5
+      period: 5
+
+# Data Pipeline Configuration
+data_pipeline:
+  batch_size: 1000
+  processing_interval_minutes: 15
+  data_retention_days: 365
+  
+  sources:
+    - name: "manufacturing_db"
+      type: "postgresql"
+      connection_string: "${DB_CONNECTION_STRING}"
+      tables:
+        - "wafer_measurements"
+        - "process_parameters"
+        - "defect_classifications"
+        
+    - name: "equipment_sensors"
+      type: "kafka"
+      brokers: "${KAFKA_BROKERS}"
+      topics:
+        - "temperature_readings"
+        - "pressure_readings"
+        - "chamber_status"
+
+# Feature Store Configuration
+feature_store:
+  backend: "feast"
+  online_store:
+    type: "redis"
+    connection_string: "${REDIS_URL}"
+  offline_store:
+    type: "postgresql"
+    connection_string: "${FEATURE_STORE_DB_URL}"
+    
+  feature_groups:
+    - name: "process_parameters"
+      features:
+        - "temperature"
+        - "pressure"
+        - "etch_time"
+        - "deposition_rate"
+        - "chamber_flow"
+      freshness: "1h"
+      
+    - name: "wafer_metrics"
+      features:
+        - "defect_count"
+        - "yield_rate"
+        - "die_count"
+      freshness: "15m"
+
+# Experiment Tracking
+experiments:
+  tracking_server: "mlflow"
+  artifact_storage: "s3"
+  auto_logging: true
+  
+  hyperparameter_tuning:
+    framework: "optuna"
+    n_trials: 100
+    timeout_minutes: 120
+    
+  model_selection:
+    cross_validation_folds: 5
+    test_size: 0.2
+    stratify: true
+
+# Security Configuration
+security:
+  authentication:
+    method: "oauth2"
+    provider: "azure_ad"
+    
+  authorization:
+    rbac_enabled: true
+    roles:
+      - name: "ml_engineer"
+        permissions:
+          - "model:read"
+          - "model:write"
+          - "experiment:create"
+          - "deployment:staging"
+          
+      - name: "data_scientist"
+        permissions:
+          - "model:read"
+          - "experiment:create"
+          - "data:read"
+          
+      - name: "production_admin"
+        permissions:
+          - "model:read"
+          - "deployment:production"
+          - "monitoring:read"
+          
+  data_encryption:
+    at_rest: true
+    in_transit: true
+    key_management: "azure_key_vault"
+
+# Logging and Monitoring
+logging:
+  level: "INFO"
+  format: "json"
+  retention_days: 30
+  
+  destinations:
+    - type: "file"
+      path: "/var/log/mlops"
+    - type: "elasticsearch"
+      url: "${ELASTICSEARCH_URL}"
+      index: "mlops-logs"
+
+# Alerting Configuration
+alerting:
+  channels:
+    - name: "slack"
+      webhook_url: "${SLACK_WEBHOOK_URL}"
+      channel: "#ml-alerts"
+      
+    - name: "email"
+      smtp_server: "${SMTP_SERVER}"
+      recipients:
+        - "ml-team@globalfoundries.com"
+        - "ops-team@globalfoundries.com"
+        
+  rules:
+    - name: "model_performance_degradation"
+      condition: "accuracy < 0.90"
+      severity: "high"
+      channels: ["slack", "email"]
+      
+    - name: "data_drift_detected"
+      condition: "drift_score > 0.1"
+      severity: "medium"
+      channels: ["slack"]
+      
+    - name: "prediction_latency_high"
+      condition: "avg_latency > 100ms"
+      severity: "medium"
+      channels: ["slack"]
+
+# Cost Optimization
+cost_optimization:
+  auto_scaling:
+    enabled: true
+    scale_down_delay: "5m"
+    scale_up_delay: "30s"
+    
+  resource_limits:
+    cpu_utilization_target: 70
+    memory_utilization_target: 80
+    
+  spot_instances:
+    enabled: true
+    environments: ["development", "staging"]
+    
+# Compliance and Governance
+compliance:
+  data_governance:
+    lineage_tracking: true
+    audit_logging: true
+    retention_policies:
+      model_artifacts: "2_years"
+      experiment_data: "1_year"
+      logs: "6_months"
+      
+  model_governance:
+    approval_required: true
+    approvers:
+      - "ml_lead@globalfoundries.com"
+      - "engineering_manager@globalfoundries.com"
+    documentation_required: true
+    
+  regulatory_compliance:
+    standards: ["ISO_27001", "SOC_2"]
+    audit_frequency: "quarterly"
